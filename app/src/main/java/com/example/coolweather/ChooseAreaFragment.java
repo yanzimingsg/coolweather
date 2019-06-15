@@ -1,6 +1,7 @@
 package com.example.coolweather;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import com.example.coolweather.db.City;
 import com.example.coolweather.db.County;
 import com.example.coolweather.db.Province;
+import com.example.coolweather.type.UrlType;
 import com.example.coolweather.util.HttpUilt;
 import com.example.coolweather.util.Utility;
 
@@ -52,6 +54,8 @@ public class ChooseAreaFragment extends Fragment {
     private List<Province> provinceList;
     //市列表
     private List<City> cityList;
+    //县列表
+    private List<County> countyList;
     //选中的省份
     private Province selectedProvince;
     //选中的城市
@@ -84,6 +88,12 @@ public class ChooseAreaFragment extends Fragment {
                 }else if(currentLevel == LEVEL_CITY){
                     selectedCity = cityList.get(position);
                     queryCounties();
+                }else if(currentLevel == LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    Objects.requireNonNull(getActivity()).finish();
                 }
             }
         });
@@ -115,8 +125,7 @@ public class ChooseAreaFragment extends Fragment {
             listView.setSelection(0);
             currentLevel = LEVEL_PROVINCE;
         }else{
-            String address  = "http://guolin.tech/api/china";
-            queryFromServer(address,"province");
+            queryFromServer(UrlType.URL_ADDRESS,"province");
         }
     }
 
@@ -135,7 +144,7 @@ public class ChooseAreaFragment extends Fragment {
             currentLevel = LEVEL_CITY;
         }else{
             int provinceCode = selectedProvince.getProvinceCode();
-            String address = "http://guolin.tech/api/china/" + provinceCode;
+            String address = UrlType.URL_ADDRESS+ "/" + provinceCode;
             queryFromServer(address,"city");
         }
     }
@@ -144,8 +153,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
-        //县列表
-        List<County> countyList = LitePal.where("cityid = ?", String.valueOf(selectedCity.getId())).find(County.class);
+         countyList = LitePal.where("cityid = ?", String.valueOf(selectedCity.getId())).find(County.class);
         if(countyList.size() > 0){
             dataList.clear();
             for(County county : countyList){
@@ -157,7 +165,7 @@ public class ChooseAreaFragment extends Fragment {
         }else{
             int provinceCode = selectedProvince.getProvinceCode();
             int cityCode  =selectedCity.getCityCode();
-            String address = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
+            String address = UrlType.URL_ADDRESS+ "/ " + provinceCode + "/" + cityCode;
             queryFromServer(address,"county");
         }
     }
